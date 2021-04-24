@@ -64,3 +64,16 @@ contract GameItem {
     function isApprovedForAll(address _owner, address operator) public constant returns (bool) {
         return _operatorApprovals[_owner][operator];
     }
+
+    function approve(address approved, uint256 tokenId) public {
+        address tokenOwner = _tokenOwner[tokenId];
+        require(tokenOwner != address(0));
+        require(msg.sender == tokenOwner || _operatorApprovals[tokenOwner][msg.sender]);
+        _tokenApprovals[tokenId] = approved;
+        Approval(tokenOwner, approved, tokenId);
+    }
+
+    function setApprovalForAll(address operator, bool approved) public {
+        _operatorApprovals[msg.sender][operator] = approved;
+        ApprovalForAll(msg.sender, operator, approved);
+    }
