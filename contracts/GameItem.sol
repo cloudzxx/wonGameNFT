@@ -38,3 +38,7 @@ contract GameItem {
         _supportedInterfaces[ERC165_INTERFACE_ID] = true;
         _supportedInterfaces[ERC721_INTERFACE_ID] = true;
     }
+
+    function supportsInterface(bytes4 interfaceID) public constant returns (bool) {
+        return _supportedInterfaces[interfaceID];
+    }
