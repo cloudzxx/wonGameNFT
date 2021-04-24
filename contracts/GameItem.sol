@@ -123,6 +123,15 @@ contract GameItem {
         Burn(tokenOwner, tokenId);
         Transfer(tokenOwner, address(0), tokenId);
     }
+
+    function tokenURI(uint256 tokenId) public constant returns (string) {
+        require(_tokenOwner[tokenId] != address(0));
+        return _tokenURIs[tokenId];
+    }
+
+    function setBaseURI(string uri) public {
+        baseURI = uri;
+    }
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal constant returns (bool) {
         address tokenOwner = _tokenOwner[tokenId];
         return (spender == tokenOwner || getApproved(tokenId) == spender || isApprovedForAll(tokenOwner, spender));
