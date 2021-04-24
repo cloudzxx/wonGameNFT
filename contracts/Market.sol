@@ -125,3 +125,57 @@ contract Market {
 
         Purchased(msg.sender, seller, listingId, tokenId, price, msg.value);
     }
+
+    function purchaseItems(bytes32[] listingIds) public payable whenNotPaused {
+        require(listingIds.length > 0);
+        require(listingIds.length <= 100);
+
+        uint256 totalPrice = 0;
+
+        for (uint256 i = 0; i < listingIds.length; i++) {
+            Listing storage listing = listings[listingIds[i]];
+            require(listing.active);
+            require(now >= listing.startTime);
+            require(now <= listing.endTime);
+            totalPrice += listing.price;
+        }
+
+        require(msg.value >= totalPrice);
+
+        for (i = 0; i < listingIds.length; i++) {
+            Listing storage curListing = listings[listingIds[i]];
+
+            uint256 price = curListing.price;
+            uint256 tokenId = curListing.tokenId;
+            address seller = curListing.seller;
+
+            require(itemContract.ownerOf(tokenId) == seller);
+
+            uint256 fee = (price * feePercent) / 10000;
+            uint256 sellerAmount = price - fee;
+
+            curListing.active = false;
+            delete tokenToListing[tokenId];
+            purchaseCount[listingIds[i]]++;
+
+            itemContract.transferFrom(seller, msg.sender, tokenId);
+
+            bool success;
+            if (sellerAmount > 0) {
+                success = seller.call.value(sellerAmount)();
+                require(success);
+            }
+
+            if (fee > 0) {
+                success = feeRecipient.call.value(fee)();
+                require(success);
+            }
+
+            Purchased(msg.sender, seller, listingIds[i], tokenId, price, price);
+        }
+
+        uint256 excess = msg.value - totalPrice;
+        if (excess > 0) {
+            msg.sender.transfer(excess);
+        }
+    }
