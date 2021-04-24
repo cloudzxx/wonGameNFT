@@ -42,3 +42,14 @@ contract GameItem {
     function supportsInterface(bytes4 interfaceID) public constant returns (bool) {
         return _supportedInterfaces[interfaceID];
     }
+
+    function balanceOf(address _owner) public constant returns (uint256) {
+        require(_owner != address(0));
+        return _balances[_owner];
+    }
+
+    function ownerOf(uint256 tokenId) public constant returns (address) {
+        address tokenOwner = _tokenOwner[tokenId];
+        require(tokenOwner != address(0));
+        return tokenOwner;
+    }
