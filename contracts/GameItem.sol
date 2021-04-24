@@ -82,6 +82,14 @@ contract GameItem {
         require(_isApprovedOrOwner(msg.sender, tokenId));
         _transferFrom(from, to, tokenId);
     }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId) public {
+        _safeTransferFrom(from, to, tokenId, "");
+    }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) public {
+        _safeTransferFrom(from, to, tokenId, data);
+    }
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal constant returns (bool) {
         address tokenOwner = _tokenOwner[tokenId];
         return (spender == tokenOwner || getApproved(tokenId) == spender || isApprovedForAll(tokenOwner, spender));
@@ -98,4 +106,19 @@ contract GameItem {
         _tokenOwner[tokenId] = to;
 
         Transfer(from, to, tokenId);
+    }
+
+    function _safeTransferFrom(address from, address to, uint256 tokenId, bytes data) internal {
+        transferFrom(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, data));
+    }
+
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes data) internal returns (bool) {
+        uint size;
+        assembly { size := extcodesize(to) }
+        if (size == 0) {
+            return true;
+        }
+        bytes4 retval = ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data);
+        return (retval == ERC721_RECEIVED);
     }
