@@ -209,3 +209,25 @@ contract Market {
 
         listing.price = newPrice;
     }
+
+    function isListed(uint256 tokenId) public constant returns (bool) {
+        bytes32 listingId = tokenToListing[tokenId];
+        if (listingId == bytes32(0)) return false;
+        return listings[listingId].active && now <= listings[listingId].endTime;
+    }
+
+    function getListing(bytes32 listingId) public constant returns (
+        address seller,
+        uint256 tokenId,
+        uint256 price,
+        uint256 startTime,
+        uint256 endTime,
+        bool active
+    ) {
+        Listing memory listing = listings[listingId];
+        return (listing.seller, listing.tokenId, listing.price, listing.startTime, listing.endTime, listing.active);
+    }
+
+    function getListingId(uint256 tokenId) public constant returns (bytes32) {
+        return tokenToListing[tokenId];
+    }
