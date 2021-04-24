@@ -1,0 +1,16 @@
+{
+  "name": "wongamenft",
+  "version": "1.0.0",
+  "description": "WonGameNFT - game token trading platform with ERC721 and marketplace",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^3.0.0",
+    "hardhat": "^2.0.0"
+  }
+}
