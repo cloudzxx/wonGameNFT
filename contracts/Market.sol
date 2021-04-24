@@ -83,3 +83,45 @@ contract Market {
 
         Unlisted(listing.seller, listingId, tokenId);
     }
+
+    function purchaseItem(bytes32 listingId) public payable whenNotPaused {
+        Listing storage listing = listings[listingId];
+
+        require(listing.active);
+        require(now >= listing.startTime);
+        require(now <= listing.endTime);
+
+        uint256 price = listing.price;
+        uint256 tokenId = listing.tokenId;
+        address seller = listing.seller;
+
+        require(msg.value >= price);
+        require(itemContract.ownerOf(tokenId) == seller);
+
+        uint256 fee = (price * feePercent) / 10000;
+        uint256 sellerAmount = price - fee;
+
+        listing.active = false;
+        delete tokenToListing[tokenId];
+        purchaseCount[listingId]++;
+
+        itemContract.transferFrom(seller, msg.sender, tokenId);
+
+        bool success;
+        if (sellerAmount > 0) {
+            success = seller.call.value(sellerAmount)();
+            require(success);
+        }
+
+        if (fee > 0) {
+            success = feeRecipient.call.value(fee)();
+            require(success);
+        }
+
+        uint256 excess = msg.value - price;
+        if (excess > 0) {
+            msg.sender.transfer(excess);
+        }
+
+        Purchased(msg.sender, seller, listingId, tokenId, price, msg.value);
+    }
