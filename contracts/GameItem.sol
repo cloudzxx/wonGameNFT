@@ -140,6 +140,49 @@ contract GameItem {
     function setBaseURI(string uri) public {
         baseURI = uri;
     }
+    function setMigrationRoot(bytes32 root) public onlyOwner {
+        bytes32 oldRoot = migrationRoot;
+        migrationRoot = root;
+        MigrationRootUpdated(oldRoot, root);
+    }
+
+    function migrateFromLegacy(bytes32[] proof, uint256 legacyItemId, string uri) public returns (uint256) {
+        bytes32 leaf = keccak256(msg.sender, legacyItemId, uri);
+        require(!_migrationClaims[leaf]);
+        require(migrationRoot != bytes32(0));
+        require(_verifyProof(proof, leaf, migrationRoot));
+
+        _migrationClaims[leaf] = true;
+
+        require(msg.sender != address(0));
+        uint256 tokenId = tokenIdCounter++;
+        _tokenOwner[tokenId] = msg.sender;
+        creators[tokenId] = address(this);
+        _tokenURIs[tokenId] = uri;
+        _balances[msg.sender]++;
+
+        legacyToToken[legacyItemId] = tokenId;
+        totalMigrated++;
+
+        Mint(msg.sender, tokenId, uri);
+        Transfer(address(0), msg.sender, tokenId);
+        Migrated(msg.sender, legacyItemId, tokenId, uri);
+
+        return tokenId;
+    }
+
+    function _verifyProof(bytes32[] proof, bytes32 leaf, bytes32 root) internal constant returns (bool) {
+        bytes32 computedHash = leaf;
+        for (uint256 i = 0; i < proof.length; i++) {
+            bytes32 proofElement = proof[i];
+            if (computedHash < proofElement) {
+                computedHash = keccak256(computedHash, proofElement);
+            } else {
+                computedHash = keccak256(proofElement, computedHash);
+            }
+        }
+        return computedHash == root;
+    }
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal constant returns (bool) {
         address tokenOwner = _tokenOwner[tokenId];
         return (spender == tokenOwner || getApproved(tokenId) == spender || isApprovedForAll(tokenOwner, spender));
