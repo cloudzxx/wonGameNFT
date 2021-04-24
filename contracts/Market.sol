@@ -44,3 +44,29 @@ contract Market {
         feePercent = feePercent_;
         owner = msg.sender;
     }
+    function listItem(uint256 tokenId, uint256 price, uint256 duration) public whenNotPaused returns (bytes32 listingId) {
+        require(price > 0);
+        require(duration >= MIN_LISTING_DURATION);
+        require(duration <= MAX_LISTING_DURATION);
+        require(itemContract.ownerOf(tokenId) == msg.sender);
+        require(itemContract.getApproved(tokenId) == address(this) || itemContract.isApprovedForAll(msg.sender, address(this)));
+        require(!isListed(tokenId));
+
+        uint256 startTime = now;
+        uint256 endTime = startTime + duration;
+
+        listingId = keccak256(msg.sender, tokenId, price, startTime, endTime);
+
+        listings[listingId] = Listing({
+            seller: msg.sender,
+            tokenId: tokenId,
+            price: price,
+            startTime: startTime,
+            endTime: endTime,
+            active: true
+        });
+
+        tokenToListing[tokenId] = listingId;
+
+        Listed(msg.sender, listingId, tokenId, price, startTime, endTime);
+    }
