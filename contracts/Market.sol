@@ -261,3 +261,36 @@ contract Market {
         uint256 tokenId = listing.tokenId;
         listing.active = false;
         delete tokenToListing[tokenId];
+
+        Unlisted(listing.seller, listingId, tokenId);
+    }
+
+    function withdrawAccidentalNFT(address nftAddress, uint256 tokenId, address recipient) public onlyOwner {
+        require(recipient != address(0));
+        require(GameItem(nftAddress).ownerOf(tokenId) == address(this));
+        GameItem(nftAddress).transferFrom(address(this), recipient, tokenId);
+    }
+
+    function withdrawEther() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0);
+        owner.transfer(balance);
+        EtherWithdrawn(owner, balance);
+    }
+
+    function pause() public onlyOwner {
+        require(!paused);
+        paused = true;
+        Paused();
+    }
+
+    function unpause() public onlyOwner {
+        require(paused);
+        paused = false;
+        Unpaused();
+    }
+
+    function () external payable {
+        require(msg.value > 0);
+    }
+}
