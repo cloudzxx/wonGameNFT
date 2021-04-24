@@ -108,6 +108,21 @@ contract GameItem {
 
         return tokenId;
     }
+
+    function burn(uint256 tokenId) public {
+        address tokenOwner = _tokenOwner[tokenId];
+        require(tokenOwner != address(0));
+        require(msg.sender == tokenOwner || _isApprovedOrOwner(msg.sender, tokenId));
+
+        delete _tokenApprovals[tokenId];
+        delete _tokenURIs[tokenId];
+        delete creators[tokenId];
+        _tokenOwner[tokenId] = address(0);
+        _balances[tokenOwner]--;
+
+        Burn(tokenOwner, tokenId);
+        Transfer(tokenOwner, address(0), tokenId);
+    }
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal constant returns (bool) {
         address tokenOwner = _tokenOwner[tokenId];
         return (spender == tokenOwner || getApproved(tokenId) == spender || isApprovedForAll(tokenOwner, spender));
