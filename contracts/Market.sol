@@ -231,3 +231,33 @@ contract Market {
     function getListingId(uint256 tokenId) public constant returns (bytes32) {
         return tokenToListing[tokenId];
     }
+
+    function updateFeePercent(uint256 newFeePercent) public onlyOwner {
+        require(newFeePercent <= 1000);
+        uint256 oldFee = feePercent;
+        feePercent = newFeePercent;
+        FeeUpdated(oldFee, newFeePercent);
+    }
+
+    function updateFeeRecipient(address newRecipient) public onlyOwner {
+        require(newRecipient != address(0));
+        address oldRecipient = feeRecipient;
+        feeRecipient = newRecipient;
+        FeeRecipientUpdated(oldRecipient, newRecipient);
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0));
+        address oldOwner = owner;
+        owner = newOwner;
+        OwnershipTransferred(oldOwner, newOwner);
+    }
+
+    function cleanupExpiredListing(bytes32 listingId) public onlyOwner {
+        Listing storage listing = listings[listingId];
+        require(listing.active);
+        require(now > listing.endTime);
+
+        uint256 tokenId = listing.tokenId;
+        listing.active = false;
+        delete tokenToListing[tokenId];
