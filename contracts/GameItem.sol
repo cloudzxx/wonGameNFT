@@ -53,3 +53,14 @@ contract GameItem {
         require(tokenOwner != address(0));
         return tokenOwner;
     }
+
+    function getApproved(uint256 tokenId) public constant returns (address) {
+        if (_tokenOwner[tokenId] == address(0)) {
+            return address(0);
+        }
+        return _tokenApprovals[tokenId];
+    }
+
+    function isApprovedForAll(address _owner, address operator) public constant returns (bool) {
+        return _operatorApprovals[_owner][operator];
+    }
