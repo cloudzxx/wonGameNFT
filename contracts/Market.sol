@@ -179,3 +179,33 @@ contract Market {
             msg.sender.transfer(excess);
         }
     }
+
+    function extendListing(bytes32 listingId, uint256 additionalDuration) public whenNotPaused {
+        require(additionalDuration > 0);
+        require(additionalDuration <= MAX_LISTING_DURATION);
+
+        Listing storage listing = listings[listingId];
+
+        require(listing.active);
+        require(listing.seller == msg.sender);
+
+        uint256 currentEnd = listing.endTime;
+        require(now <= currentEnd);
+
+        listing.endTime = currentEnd + additionalDuration;
+
+        Listed(listing.seller, listingId, listing.tokenId, listing.price, listing.startTime, listing.endTime);
+    }
+
+    function updateListingPrice(bytes32 listingId, uint256 newPrice) public whenNotPaused {
+        require(newPrice > 0);
+
+        Listing storage listing = listings[listingId];
+
+        require(listing.active);
+        require(listing.seller == msg.sender);
+
+        Listed(listing.seller, listingId, listing.tokenId, newPrice, listing.startTime, listing.endTime);
+
+        listing.price = newPrice;
+    }
