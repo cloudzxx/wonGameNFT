@@ -70,3 +70,16 @@ contract Market {
 
         Listed(msg.sender, listingId, tokenId, price, startTime, endTime);
     }
+
+    function unlistItem(bytes32 listingId) public whenNotPaused {
+        Listing storage listing = listings[listingId];
+
+        require(listing.active);
+        require(listing.seller == msg.sender || msg.sender == owner);
+
+        uint256 tokenId = listing.tokenId;
+        listing.active = false;
+        delete tokenToListing[tokenId];
+
+        Unlisted(listing.seller, listingId, tokenId);
+    }
