@@ -77,3 +77,25 @@ contract GameItem {
         _operatorApprovals[msg.sender][operator] = approved;
         ApprovalForAll(msg.sender, operator, approved);
     }
+
+    function transferFrom(address from, address to, uint256 tokenId) public {
+        require(_isApprovedOrOwner(msg.sender, tokenId));
+        _transferFrom(from, to, tokenId);
+    }
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal constant returns (bool) {
+        address tokenOwner = _tokenOwner[tokenId];
+        return (spender == tokenOwner || getApproved(tokenId) == spender || isApprovedForAll(tokenOwner, spender));
+    }
+
+    function _transferFrom(address from, address to, uint256 tokenId) internal {
+        require(_tokenOwner[tokenId] == from);
+        require(to != address(0));
+
+        delete _tokenApprovals[tokenId];
+
+        _balances[from]--;
+        _balances[to]++;
+        _tokenOwner[tokenId] = to;
+
+        Transfer(from, to, tokenId);
+    }
