@@ -28,6 +28,11 @@ contract GameItem {
     bytes4 constant ERC165_INTERFACE_ID = bytes4(0x01ffc9a7);
     bytes4 constant ERC721_INTERFACE_ID = bytes4(0x80ac58cd);
     bytes4 constant ERC721_RECEIVED = bytes4(0x150b7a02);
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
     function GameItem() public {
         owner = msg.sender;
         name = "GameItem";
@@ -38,7 +43,6 @@ contract GameItem {
         _supportedInterfaces[ERC165_INTERFACE_ID] = true;
         _supportedInterfaces[ERC721_INTERFACE_ID] = true;
     }
-
     function supportsInterface(bytes4 interfaceID) public constant returns (bool) {
         return _supportedInterfaces[interfaceID];
     }
@@ -89,6 +93,20 @@ contract GameItem {
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) public {
         _safeTransferFrom(from, to, tokenId, data);
+    }
+
+    function mint(address to, string uri) public onlyOwner returns (uint256) {
+        require(to != address(0));
+        uint256 tokenId = tokenIdCounter++;
+        _tokenOwner[tokenId] = to;
+        creators[tokenId] = msg.sender;
+        _tokenURIs[tokenId] = uri;
+        _balances[to]++;
+
+        Mint(to, tokenId, uri);
+        Transfer(address(0), to, tokenId);
+
+        return tokenId;
     }
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal constant returns (bool) {
         address tokenOwner = _tokenOwner[tokenId];
